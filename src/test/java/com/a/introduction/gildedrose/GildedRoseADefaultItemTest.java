@@ -4,18 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class GildedRoseADefaultItemTest {
 
-    private static final String AGED_BRIE = "Aged Brie";
-    private static final int MAXIMUM_BRIE_QUALITY = 50;
-
     private static final String DEFAULT_ITEM = "DEFAULT_ITEM";
+    private static final String AGED_BRIE = "Aged Brie";
+    private static final String CONCERT_NAME = "Backstage passes to a TAFKAL80ETC concert";
     private static final int DEFAULT_QUALITY = 4;
+    private static final int MAXIMUM_BRIE_QUALITY = 50;
     private static final int NOT_EXPIRED_SELLIN = 16;
     private static final int EXPIRED_SELLIN = -1;
+    private static final int MORE_THAN10DAYS_BEFORE_CONCERT_SELLIN = 15;
+    private static final int LESS_THAN10DAYS_BEFORE_CONCERT_SELLIN = 7;
+    private static final int LESS_THAN5DAYS_BEFORE_CONCERT_SELLIN = 3;
+
     /**
      * Method to test the variation in quality of the item for the non expired
      * Item.
@@ -69,6 +70,30 @@ public class GildedRoseADefaultItemTest {
         GildedRose app = createGildedRoseWithOneItem(AGED_BRIE, NOT_EXPIRED_SELLIN, MAXIMUM_BRIE_QUALITY);
         app.updateQuality();
         Item expected = new Item(AGED_BRIE, NOT_EXPIRED_SELLIN - 1, MAXIMUM_BRIE_QUALITY);
+        assertItem(expected,app.items[0]);
+    }
+
+    @Test
+    public void unexpiredPasses_MoreThan10DaysBeforeConcertQualityIncreasesBy1() {
+        GildedRose app = createGildedRoseWithOneItem(CONCERT_NAME, MORE_THAN10DAYS_BEFORE_CONCERT_SELLIN, DEFAULT_QUALITY);
+        app.updateQuality();
+        Item expected = new Item(CONCERT_NAME, MORE_THAN10DAYS_BEFORE_CONCERT_SELLIN - 1, DEFAULT_QUALITY+1);
+        assertItem(expected,app.items[0]);
+    }
+
+    @Test
+    public void unexpiredPasses_LessThan10DaysBeforeConcertQualityIncreasesBy2() {
+        GildedRose app = createGildedRoseWithOneItem(CONCERT_NAME, LESS_THAN10DAYS_BEFORE_CONCERT_SELLIN, DEFAULT_QUALITY);
+        app.updateQuality();
+        Item expected = new Item(CONCERT_NAME, LESS_THAN10DAYS_BEFORE_CONCERT_SELLIN - 1, DEFAULT_QUALITY+2);
+        assertItem(expected,app.items[0]);
+    }
+
+    @Test
+    public void unexpiredPasses_LessThan5DaysBeforeConcertQualityIncreasesBy3() {
+        GildedRose app = createGildedRoseWithOneItem(CONCERT_NAME, LESS_THAN5DAYS_BEFORE_CONCERT_SELLIN, DEFAULT_QUALITY);
+        app.updateQuality();
+        Item expected = new Item(CONCERT_NAME, LESS_THAN5DAYS_BEFORE_CONCERT_SELLIN - 1, DEFAULT_QUALITY+3);
         assertItem(expected,app.items[0]);
     }
 
