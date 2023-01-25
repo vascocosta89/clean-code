@@ -29,4 +29,6 @@ public class TextHelperTest {
 		assertEquals("BCD",helper.truncateAInFirst2Positions("BACD"));
 		assertEquals("BBAA",helper.truncateAInFirst2Positions("BBAA"));
 	}
+
+
 }
