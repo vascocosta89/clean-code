@@ -11,33 +11,42 @@ import com.b.simple.design.model.customer.Product;
 
 public class CustomerBOImpl implements CustomerBO {
 
-	@Override
-	public Amount getCustomerProductsSum(List<Product> products)
-			throws DifferentCurrenciesException {
-		BigDecimal temp = BigDecimal.ZERO;
+    public static final BigDecimal ZERO = BigDecimal.ZERO;
+    public static final Currency EURO = Currency.EURO;
 
-		if (products.size() == 0)
-			return new AmountImpl(temp, Currency.EURO);
+    @Override
+    public Amount getCustomerProductsSum(List<Product> products)
+            throws DifferentCurrenciesException {
 
-		// Throw Exception If Any of the product has a currency different from
-		// the first product
-		Currency firstProductCurrency = products.get(0).getAmount()
-				.getCurrency();
+        if (products.isEmpty())
+            return new AmountImpl(ZERO, EURO);
 
-		for (Product product : products) {
-			boolean currencySameAsFirstProduct = product.getAmount()
-					.getCurrency().equals(firstProductCurrency);
-			if (!currencySameAsFirstProduct) {
-				throw new DifferentCurrenciesException();
-			}
-		}
+        Currency getFirstProductCurrency = products.get(0).getAmount().getCurrency();
 
-		// Calculate Sum of Products
-		for (Product product : products) {
-			temp = temp.add(product.getAmount().getValue());
-		}
-		
-		// Create new product
-		return new AmountImpl(temp, firstProductCurrency);
-	}
+        if (!validateCurrencies(products, getFirstProductCurrency)) {
+            throw new DifferentCurrenciesException();
+        }
+
+        BigDecimal amount = sum(products);
+
+        return new AmountImpl(amount, getFirstProductCurrency);
+    }
+
+    private static BigDecimal sum(List<Product> products) {
+        BigDecimal amount = BigDecimal.ZERO;
+        for (Product product : products) {
+            amount = amount.add(product.getAmount().getValue());
+        }
+        return amount;
+    }
+
+
+    private static Boolean validateCurrencies(List<Product> products, Currency getFirstProductCurrency) throws DifferentCurrenciesException {
+        for (Product product : products) {
+            if (product.getAmount().getCurrency() != getFirstProductCurrency) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
