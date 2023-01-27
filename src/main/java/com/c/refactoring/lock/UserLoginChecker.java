@@ -11,7 +11,7 @@ public class UserLoginChecker {
     public Lock isUserAllowedToLogin(long id, String status, boolean firstScreen,
                                      User userTryingLogin, List existingLocks) {
 
-        if (!existingLocks.isEmpty() && !Objects.isNull(existingLocks.get(0))) {
+        if (existingLocks.isEmpty() && Objects.isNull(existingLocks.get(0))) {
             return createWriteLock();
         }
 
@@ -19,12 +19,12 @@ public class UserLoginChecker {
         String userId = (String) existingLock[0];
         Date lockTimestamp = (Date) existingLock[1];
 
-        if (userId != null) {
-            return setTrueAndReturnLock(userId);
+        if (userId == null) {
+            return createWriteLock();
         }
 
         if (userId.equalsIgnoreCase(userTryingLogin.getUserId())) {
-            return setTrueAndReturnLock(userId);
+            return createWriteLock();
         }
 
         long timePassedSinceLock = new Date().getTime() - lockTimestamp.getTime();
