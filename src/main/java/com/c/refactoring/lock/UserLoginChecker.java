@@ -19,18 +19,16 @@ public class UserLoginChecker {
         String userId = (String) existingLock[0];
         Date lockTimestamp = (Date) existingLock[1];
 
-        if (userId == null) {
-            return createWriteLock();
-        }
-
-        if (userId.equalsIgnoreCase(userTryingLogin.getUserId())) {
+        if (userId == null || userId.equalsIgnoreCase(userTryingLogin.getUserId())) {
             return createWriteLock();
         }
 
         long timePassedSinceLock = new Date().getTime() - lockTimestamp.getTime();
+
         if (firstScreen && timePassedSinceLock > MAXIMUM_LOCK_PERIOD_IN_MS) {
                 return createWriteLock();
             }
+
         return setTrueAndReturnLock(userId);
     }
 
