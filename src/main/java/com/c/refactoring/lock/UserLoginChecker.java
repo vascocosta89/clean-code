@@ -2,52 +2,49 @@ package com.c.refactoring.lock;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class UserLoginChecker {
 
-    /**
-     * {@inheritDoc}.
-     */
-    public Lock isUserAllowedToLogin(long id, String status,
-            boolean firstScreen, User user, List list) {
-        Date time = new Date();
-        Lock lck = new Lock();
-        if (list.size() > 0 && list.get(0) != null) {
-            Object[] object = (Object[]) list.get(0);
-            String userId = (String) object[0];
-            Date lockTimestamp = (Date) object[1];
-            if (userId != null) {
-                // message which is shown to the user 
-                String lockMsg = Constants.LOCK_TEXT.replaceAll("@@USER@@",
-                        userId);
-                //if userID is present, the Lock time stamp will also be present
-                //4800000 milliseconds equals to 1 1/2 hours.
-                if (time.getTime() - lockTimestamp.getTime() > 3600000) {
-                    //New user gets lock only on first screen 
-                    //If 1 1/2 hours expires when user is not on 1st screen then for same user lock can be refreshed.
-                    if (firstScreen
-                            || userId.equalsIgnoreCase(user.getUserId())) {
-                        //to set the  access to write mode
-                        lck.setRead(false);
-                        return lck;
-                    }
-                    lck.setRead(true);
-                    //Only read access is permitted to other user
-                    lck.setLockReason(lockMsg);
-                    return lck;
-                } else if (userId.equalsIgnoreCase(user.getUserId())) {
-                    // Locked By Same User, Write access
-                    lck.setRead(false);
-                    return lck;
-                } else {
-                    lck.setRead(true);
-                    //Only Read Access is Permitted
-                    lck.setLockReason(lockMsg);
-                    return lck;
-                }
-            }
+    private static final int MAXIMUM_LOCK_PERIOD_IN_MS = 60 * 60 * 1000;
+
+    public Lock isUserAllowedToLogin(long id, String status, boolean firstScreen,
+                                     User userTryingLogin, List existingLocks) {
+
+        if (!existingLocks.isEmpty() && !Objects.isNull(existingLocks.get(0))) {
+            return createWriteLock();
         }
-        lck.setRead(false);
-        return lck;
+
+        Object[] existingLock = (Object[]) existingLocks.get(0);
+        String userId = (String) existingLock[0];
+        Date lockTimestamp = (Date) existingLock[1];
+
+        if (userId != null) {
+            return setTrueAndReturnLock(userId);
+        }
+
+        if (userId.equalsIgnoreCase(userTryingLogin.getUserId())) {
+            return setTrueAndReturnLock(userId);
+        }
+
+        long timePassedSinceLock = new Date().getTime() - lockTimestamp.getTime();
+        if (firstScreen && timePassedSinceLock > MAXIMUM_LOCK_PERIOD_IN_MS) {
+                return createWriteLock();
+            }
+        return setTrueAndReturnLock(userId);
+    }
+
+    private Lock createWriteLock() {
+        Lock lock = new Lock();
+        lock.setRead(false);
+        return lock;
+    }
+
+    private static Lock setTrueAndReturnLock(String userId) {
+        String lockMsg = Constants.LOCK_TEXT.replaceAll("@@USER@@", userId);
+        Lock lock = new Lock();
+        lock.setRead(true);
+        lock.setLockReason(lockMsg);
+        return lock;
     }
 }
